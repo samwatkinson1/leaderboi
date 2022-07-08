@@ -1,5 +1,6 @@
 {
     "name": "leaderboi",
+    "description": "the goodest bot you ever did see",
     "version": "0.0.1",
     "main": "dist/index.js",
     "author": "Sam Watkinson <samwatkinson@outlook.com>",
