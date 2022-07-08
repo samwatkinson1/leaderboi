@@ -15,7 +15,8 @@
         "lint:staged": "yarn lint:tsc && yarn lint:eslint --max-warnings 0",
         "dev": "nodemon ./src/index.ts",
         "start": "node .",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "deploy-commands": "ts-node src/deploy-commands.ts"
     },
     "lint-staged": {
         "**/*.{ts,tsx}": [
