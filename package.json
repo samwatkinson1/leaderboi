@@ -7,16 +7,19 @@
     "scripts": {
         "prebuild": "rimraf dist/",
         "build": "tsc",
-        "lint": "tsc --noEmit && eslint . --ext .ts,tsx",
-        "lint:fix": "yarn lint --fix",
+        "lint": "yarn lint:tsc && yarn lint:eslint",
+        "lint:eslint": "eslint . --ext .ts,tsx",
+        "lint:tsc": "tsc --pretty --noEmit",
+        "lint:fix": "yarn lint:eslint --fix",
+        "lint:staged": "yarn lint:tsc && yarn lint:eslint --max-warnings 0",
         "dev": "nodemon ./src/index.ts",
         "start": "node .",
         "prepare": "husky install"
     },
     "lint-staged": {
         "**/*.{ts,tsx}": [
-            "eslint --ext .ts,tsx --fix",
-            "eslint --ext .ts,tsx --max-warnings 0"
+            "yarn lint:fix",
+            "yarn lint:staged"
         ]
     },
     "devDependencies": {
