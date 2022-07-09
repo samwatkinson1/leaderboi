@@ -8,6 +8,7 @@
     "scripts": {
         "prebuild": "rimraf dist/",
         "build": "tsc",
+        "postbuild": "yarn deploy-commands",
         "lint": "yarn lint:tsc && yarn lint:eslint",
         "lint:eslint": "eslint . --ext .ts,tsx",
         "lint:tsc": "tsc --pretty --noEmit",
