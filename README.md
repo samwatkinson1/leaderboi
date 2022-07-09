@@ -9,6 +9,7 @@ Discord bot for emoji reaction leaderboard, duh.
 Copy `.env.example` as `.env` and fill fields as appropriate:
 
 ```
+DISCORD_CLIENT_ID="Applidation client ID"
 DISCORD_TOKEN="Bot's OAuth2 token"
 ```
 
