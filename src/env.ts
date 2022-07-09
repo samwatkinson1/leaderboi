@@ -6,7 +6,6 @@ dotenv.config()
 const environment = {
     CLIENT_ID: process.env.DISCORD_CLIENT_ID ?? '',
     MONGO_URL: process.env.MONGO_URL ?? '',
-    MONGO_DATABASE: process.env.MONGO_DATABASE ?? '',
     TOKEN: process.env.DISCORD_TOKEN ?? '',
     PORT: process.env.PORT
 }
@@ -17,10 +16,6 @@ if (!environment.CLIENT_ID) {
 
 if (!environment.MONGO_URL) {
     throw new EnvironmentError('Missing DATABASE_URL in environment variables.')
-}
-
-if (!environment.MONGO_DATABASE) {
-    throw new EnvironmentError('Missing MONGO_DATABASE in environment variables.')
 }
 
 if (!environment.TOKEN) {
