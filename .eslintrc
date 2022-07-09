@@ -12,6 +12,7 @@
         "project": "./tsconfig.eslint.json"
     },
     "rules": {
-        "prettier/prettier": "error"
+        "prettier/prettier": "error",
+        "@typescript-eslint/naming-convention": "off"
     }
 }
