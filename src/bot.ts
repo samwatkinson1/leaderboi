@@ -3,6 +3,7 @@ import commandMap from './utils/commands'
 import logger from './utils/logger'
 import * as reactions from './controllers/message_reactions'
 import { indexAllMessageReactions } from './utils/message'
+import { Guild } from 'discord.js'
 
 let isIndexing = false
 
@@ -10,16 +11,28 @@ const handleDbErr = (err: Error) => {
     logger.error('db', err)
 }
 
+const startIndex = async (guild: Guild) => {
+    logger.info('bot', `Index started @ ${Date.now()}`)
+
+    isIndexing = true
+    client.user?.setPresence({ activities: [{ name: 'Indexing...' }] })
+    await indexAllMessageReactions(guild)
+}
+
+const endIndex = () => {
+    logger.info('bot', `Index ended @ ${Date.now()}`)
+
+    isIndexing = false
+    client.user?.setPresence({})
+}
+
 client.on('guildCreate', async guild => {
     logger.info('bot', `Added to guild ${guild.name}`)
 
     // TODO: Do we need to prevent other indexes?
 
-    isIndexing = true
-    client.user?.setPresence({ activities: [{ name: 'Indexing...' }] })
-    await indexAllMessageReactions(guild)
-    client.user?.setPresence({})
-    isIndexing = false
+    await startIndex(guild)
+    endIndex()
 })
 
 client.on('guildDelete', guild => {
