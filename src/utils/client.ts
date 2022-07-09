@@ -1,6 +1,6 @@
 import { Client, Intents } from 'discord.js'
 import logger from './logger'
-import env from '../env'
+import { OAuth2Scopes } from 'discord-api-types/v10'
 
 const client = new Client({
     intents: [
@@ -11,14 +11,13 @@ const client = new Client({
 })
 
 client.once('ready', c => {
-    const invite =
-        'https://discord.com/api/oauth2/authorize?client_id={client_id}&permissions=68608&scope=applications.commands%20bot'
+    const invite = c.generateInvite({
+        permissions: ['READ_MESSAGE_HISTORY', 'SEND_MESSAGES', 'VIEW_CHANNEL'],
+        scopes: [OAuth2Scopes.Bot, OAuth2Scopes.ApplicationsCommands]
+    })
 
     logger.info('bot', `Ready! Logged in as ${c.user.tag}`)
-    logger.info(
-        'bot',
-        `Use ${invite.replace('{client_id}', env.CLIENT_ID)} to invite bot to a server.`
-    )
+    logger.info('bot', `Use ${invite} to invite bot to a server.`)
 })
 
 export default client
