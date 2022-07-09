@@ -1,6 +1,5 @@
 /**
- * Manually deploy commands to Discord.
- * Useful for development environments where server can't be accessed by Discord (e.g. localhost).
+ * Deploy bot commands to Discord.
  */
 
 import * as commands from './commands'
