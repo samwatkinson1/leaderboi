@@ -5,7 +5,8 @@ dotenv.config()
 
 const environment = {
     CLIENT_ID: process.env.DISCORD_CLIENT_ID ?? '',
-    TOKEN: process.env.DISCORD_TOKEN ?? ''
+    TOKEN: process.env.DISCORD_TOKEN ?? '',
+    PORT: process.env.PORT
 }
 
 if (!environment.CLIENT_ID) {
@@ -14,6 +15,10 @@ if (!environment.CLIENT_ID) {
 
 if (!environment.TOKEN) {
     throw new EnvironmentError('Missing DISCORD_TOKEN in environment variables.')
+}
+
+if (!environment.PORT) {
+    throw new EnvironmentError('Missing PORT in environment variables.')
 }
 
 export default environment

@@ -1,3 +1,8 @@
+/**
+ * Manually deploy commands to Discord.
+ * Useful for development environments where server can't be accessed by Discord (e.g. localhost).
+ */
+
 import * as commands from './commands'
 import { buildCommands } from './utils/commands'
 import env from './env'
