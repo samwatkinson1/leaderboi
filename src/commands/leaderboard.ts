@@ -1,8 +1,16 @@
 import { Command } from '../types/command'
 import { SlashCommandBuilder } from '@discordjs/builders'
-import { ChannelLogsQueryOptions, MessageReaction, SnowflakeUtil, TextChannel } from 'discord.js'
+import {
+    ChannelLogsQueryOptions,
+    EmbedFieldData,
+    MessageEmbed,
+    MessageReaction,
+    SnowflakeUtil,
+    TextChannel
+} from 'discord.js'
 import { fetchChannel } from '../utils/interaction'
 import dayjs from 'dayjs'
+import { UniqueUserInteractions } from '../types/user'
 
 const getReactionsForChannel = async (
     channel: TextChannel,
@@ -25,8 +33,8 @@ const getReactionsForChannel = async (
 
 const getUniqueUserInteractions = async (
     reactions: MessageReaction[]
-): Promise<Map<string, number>> => {
-    const map = new Map<string, number>()
+): Promise<UniqueUserInteractions> => {
+    const map = new Map() as UniqueUserInteractions
 
     await Promise.all(reactions.map(item => item.users.fetch()))
 
@@ -47,9 +55,25 @@ const getUniqueUserInteractions = async (
     return map
 }
 
-// TODO: Validate only 1 emoji was passed
-// TODO: Pretty print reply
-// TODO: Stress test
+const renderReply = (param: string, interactions: UniqueUserInteractions): MessageEmbed => {
+    const positionEmojis: { [key: number]: string } = {
+        1: ':first_place:',
+        2: ':second_place:',
+        3: ':third_place:'
+    }
+
+    const fields: EmbedFieldData[] = [...interactions.entries()].map(([k, v], i) => {
+        const pos = i + 1
+        const name = positionEmojis[pos] ? `${positionEmojis[pos]} ${k}` : k
+        return { name, value: `${v}`, inline: pos <= 3 }
+    })
+
+    return new MessageEmbed()
+        .setTitle(`:drum: This months ${param} winners are...`)
+        .addFields(fields)
+}
+
+// FIXME: Add validation to ensure only 1 emoji was passed
 const handler: Command['handler'] = async interaction => {
     await interaction.deferReply({ ephemeral: true })
 
@@ -82,11 +106,9 @@ const handler: Command['handler'] = async interaction => {
     }
 
     const uniqueUserInteractions = await getUniqueUserInteractions(filteredReactions)
-    console.log(uniqueUserInteractions)
+    const reply = renderReply(param, uniqueUserInteractions)
 
-    const reply = [...uniqueUserInteractions.entries()].map(([k, v]) => `${k} - ${v}`).join('\n')
-
-    await interaction.editReply(reply)
+    return interaction.editReply({ embeds: [reply] })
 }
 
 const builder = new SlashCommandBuilder().addStringOption(option =>
