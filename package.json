@@ -1,14 +1,13 @@
 {
     "name": "leaderboi",
     "description": "the goodest bot you ever did see",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "main": "dist/index.js",
     "author": "Sam Watkinson <samwatkinson@outlook.com>",
     "license": "MIT",
     "scripts": {
         "prebuild": "rimraf dist/",
         "build": "tsc",
-        "postbuild": "yarn deploy-commands",
         "lint": "yarn lint:tsc && yarn lint:eslint",
         "lint:eslint": "eslint . --ext .ts,tsx",
         "lint:tsc": "tsc --pretty --noEmit",
@@ -26,6 +25,7 @@
         ]
     },
     "devDependencies": {
+        "@types/express": "^4.17.13",
         "@typescript-eslint/eslint-plugin": "^5.30.5",
         "@typescript-eslint/parser": "^5.30.5",
         "eslint": "^8.19.0",
@@ -48,6 +48,7 @@
         "dayjs": "^1.11.3",
         "discord-api-types": "^0.36.1",
         "discord.js": "^13.8.1",
-        "dotenv": "^16.0.1"
+        "dotenv": "^16.0.1",
+        "express": "^4.18.1"
     }
 }

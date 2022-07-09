@@ -67,11 +67,13 @@ const renderReply = (
         3: ':third_place:'
     }
 
-    const fields: EmbedFieldData[] = [...interactions.entries()].map(([k, v], i) => {
-        const pos = i + 1
-        const name = positionEmojis[pos] ? `${positionEmojis[pos]} ${k}` : k
-        return { name, value: `${v}`, inline: pos <= 3 }
-    })
+    const fields: EmbedFieldData[] = [...interactions.entries()]
+        .sort(([, av], [, bv]) => av - bv)
+        .map(([k, v], i) => {
+            const pos = i + 1
+            const name = positionEmojis[pos] ? `${positionEmojis[pos]} ${k}` : k
+            return { name, value: `${v}`, inline: pos <= 3 }
+        })
 
     const title = all
         ? `:drum: The all time ${param} winners are...`

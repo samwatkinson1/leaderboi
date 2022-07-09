@@ -1,14 +1,20 @@
+/**
+ * Manually deploy commands to Discord.
+ * Useful for development environments where server can't be accessed by Discord (e.g. localhost).
+ */
+
 import * as commands from './commands'
 import { buildCommands } from './utils/commands'
 import env from './env'
 import rest from './utils/rest'
 import { Routes } from 'discord-api-types/v10'
+import logger from './utils/logger'
 
 const serializedCommands = buildCommands(commands).map(command => command.toJSON())
 
 rest.put(Routes.applicationCommands(env.CLIENT_ID), { body: serializedCommands })
     .then(() => {
-        console.log('Successfully registered application commands.')
+        logger.info('bot', 'Successfully registered application commands.')
     })
     .catch(err => {
         const error = err as Error

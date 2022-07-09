@@ -1,4 +1,5 @@
 import { Client, Intents } from 'discord.js'
+import logger from './logger'
 
 const client = new Client({
     intents: [
@@ -9,7 +10,7 @@ const client = new Client({
 })
 
 client.once('ready', c => {
-    console.log(`Ready! Logged in as ${c.user.tag}`)
+    logger.info('bot', `Ready! Logged in as ${c.user.tag}`)
 })
 
 export default client
