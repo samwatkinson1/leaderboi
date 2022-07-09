@@ -11,6 +11,7 @@ import {
 import { fetchChannel } from '../utils/interaction'
 import dayjs from 'dayjs'
 import { UniqueUserInteractions } from '../types/user'
+import { Nullish } from '../types/util'
 
 const getReactionsForChannel = async (
     channel: TextChannel,
@@ -55,7 +56,11 @@ const getUniqueUserInteractions = async (
     return map
 }
 
-const renderReply = (param: string, interactions: UniqueUserInteractions): MessageEmbed => {
+const renderReply = (
+    param: string,
+    interactions: UniqueUserInteractions,
+    all: Nullish<boolean>
+): MessageEmbed => {
     const positionEmojis: { [key: number]: string } = {
         1: ':first_place:',
         2: ':second_place:',
@@ -68,16 +73,19 @@ const renderReply = (param: string, interactions: UniqueUserInteractions): Messa
         return { name, value: `${v}`, inline: pos <= 3 }
     })
 
-    return new MessageEmbed()
-        .setTitle(`:drum: This months ${param} winners are...`)
-        .addFields(fields)
+    const title = all
+        ? `:drum: The all time ${param} winners are...`
+        : `:drum: This months ${param} winners are...`
+
+    return new MessageEmbed().setTitle(title).addFields(fields)
 }
 
 // FIXME: Add validation to ensure only 1 emoji was passed
 const handler: Command['handler'] = async interaction => {
     await interaction.deferReply({ ephemeral: true })
 
-    const param = interaction.options.getString('emoji', true)
+    const allParam = interaction.options.getBoolean('all', false)
+    const emojiParam = interaction.options.getString('emoji', true)
 
     const channel = await fetchChannel(interaction)
     if (!channel || !channel?.isText()) {
@@ -85,13 +93,13 @@ const handler: Command['handler'] = async interaction => {
     }
 
     const textChannel = channel as TextChannel
-    const reactions = await getReactionsForChannel(textChannel)
+    const reactions = await getReactionsForChannel(textChannel, allParam ? {} : undefined)
 
     if (!reactions.length) {
         return interaction.editReply('No reactions found this month!')
     }
 
-    const identifiedEmoji = interaction.guild?.emojis.resolveIdentifier(param)
+    const identifiedEmoji = interaction.guild?.emojis.resolveIdentifier(emojiParam)
     if (!identifiedEmoji) {
         return interaction.editReply('Error: Bad Emoji')
     }
@@ -106,18 +114,28 @@ const handler: Command['handler'] = async interaction => {
     }
 
     const uniqueUserInteractions = await getUniqueUserInteractions(filteredReactions)
-    const reply = renderReply(param, uniqueUserInteractions)
+    const reply = renderReply(emojiParam, uniqueUserInteractions, allParam)
 
     return interaction.editReply({ embeds: [reply] })
 }
 
-const builder = new SlashCommandBuilder().addStringOption(option =>
-    option.setName('emoji').setDescription('emoji').setRequired(true)
-)
+const builder = new SlashCommandBuilder()
+    .addStringOption(option =>
+        option
+            .setName('emoji')
+            .setDescription('The emoji to generate statistics for.')
+            .setRequired(true)
+    )
+    .addBooleanOption(option =>
+        option
+            .setName('all')
+            .setDescription('Retrieve statistics for all messages in current channel')
+            .setRequired(false)
+    )
 
 export default {
     name: 'leaderboard',
-    description: 'leaderboard',
+    description: 'Give a reaction and measure who has used it the most for a month or forever!',
     builder,
     handler
 } as Command
