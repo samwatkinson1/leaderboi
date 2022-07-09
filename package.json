@@ -8,6 +8,7 @@
     "scripts": {
         "prebuild": "rimraf dist/",
         "build": "tsc",
+        "postbuild": "yarn deploy-commands",
         "lint": "yarn lint:tsc && yarn lint:eslint",
         "lint:eslint": "eslint . --ext .ts,tsx",
         "lint:tsc": "tsc --pretty --noEmit",
@@ -15,7 +16,8 @@
         "lint:staged": "yarn lint:tsc && yarn lint:eslint --max-warnings 0",
         "dev": "nodemon ./src/index.ts",
         "start": "node .",
-        "prepare": "husky install"
+        "prepare": "husky install",
+        "deploy-commands": "ts-node src/deploy-commands.ts"
     },
     "lint-staged": {
         "**/*.{ts,tsx}": [
@@ -39,5 +41,13 @@
         "rimraf": "^3.0.2",
         "ts-node": "^10.8.2",
         "typescript": "^4.7.4"
+    },
+    "dependencies": {
+        "@discordjs/builders": "^0.15.0",
+        "@discordjs/rest": "^0.5.0",
+        "dayjs": "^1.11.3",
+        "discord-api-types": "^0.36.1",
+        "discord.js": "^13.8.1",
+        "dotenv": "^16.0.1"
     }
 }
