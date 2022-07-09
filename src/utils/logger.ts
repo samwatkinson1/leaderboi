@@ -1,4 +1,4 @@
-type LoggerFn = (type: 'bot' | 'server', ...args: any[]) => void
+type LoggerFn = (type: 'bot' | 'db' | 'server', ...args: any[]) => void
 
 interface Logger {
     info: LoggerFn
