@@ -12,7 +12,7 @@ const client = new Client({
 
 client.once('ready', c => {
     const invite = c.generateInvite({
-        permissions: ['READ_MESSAGE_HISTORY', 'SEND_MESSAGES', 'VIEW_CHANNEL'],
+        permissions: ['MANAGE_MESSAGES', 'READ_MESSAGE_HISTORY', 'SEND_MESSAGES', 'VIEW_CHANNEL'],
         scopes: [OAuth2Scopes.Bot, OAuth2Scopes.ApplicationsCommands]
     })
 
