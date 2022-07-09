@@ -7,7 +7,7 @@ export interface Command {
     // Description of command
     description: string
     // How to respond to the given interaction
-    handler: (interaction: CommandInteraction) => Promise<void> | void
+    handler: (interaction: CommandInteraction) => Promise<unknown> | unknown
     // Override default builder, useful for adding options or other customizations
     builder?: SlashCommandBuilder
 }
