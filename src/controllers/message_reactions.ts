@@ -1,7 +1,7 @@
 import MessageReactions, { MessageReaction } from '../models/message_reactions'
 import { Nullish } from '../types/util'
 
-type MessageReactionReturn = Nullish<MessageReaction>
+export type MessageReactionReturn = Nullish<MessageReaction>
 
 export const get = async (reaction: Partial<MessageReaction>): Promise<MessageReactionReturn[]> => {
     try {

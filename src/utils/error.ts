@@ -4,3 +4,5 @@ export class EnvironmentError extends Error {
         this.name = 'EnvironmentError'
     }
 }
+
+export const errorReply = (error: string) => `:confused: Whoops! ${error}, please try again`

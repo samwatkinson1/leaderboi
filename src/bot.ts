@@ -15,7 +15,7 @@ const startIndex = async (guild: Guild) => {
     logger.info('bot', `Index started @ ${Date.now()}`)
 
     isIndexing = true
-    client.user?.setPresence({ activities: [{ name: 'Indexing...' }] })
+    client.user?.setPresence({ activities: [{ name: 'Building indexes...' }] })
     await indexAllMessageReactions(guild)
 }
 
@@ -31,8 +31,12 @@ client.on('guildCreate', async guild => {
 
     // TODO: Do we need to prevent other indexes?
 
-    await startIndex(guild)
-    endIndex()
+    const guildIndexes = await reactions.get({ guild_id: guild.id })
+
+    if (!guildIndexes.length) {
+        await startIndex(guild)
+        endIndex()
+    }
 })
 
 client.on('guildDelete', guild => {
@@ -95,8 +99,12 @@ client.on('messageDelete', message => {
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return
 
-    if (isIndexing)
-        return interaction.reply({ ephemeral: true, content: ':watch: Indexing please wait...' })
+    if (isIndexing) {
+        return interaction.reply({
+            ephemeral: true,
+            content: ':tools: Bot is currently building indexes, please wait...'
+        })
+    }
 
     const command = commandMap.get(interaction.commandName)
     if (command?.handler) command.handler(interaction)

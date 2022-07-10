@@ -1,66 +1,39 @@
 import { Command } from '../types/command'
 import { SlashCommandBuilder } from '@discordjs/builders'
-import {
-    ChannelLogsQueryOptions,
-    EmbedFieldData,
-    MessageEmbed,
-    MessageReaction,
-    SnowflakeUtil,
-    TextChannel
-} from 'discord.js'
-import { fetchChannel } from '../utils/interaction'
-import dayjs from 'dayjs'
+import { CommandInteraction, EmbedFieldData, MessageEmbed } from 'discord.js'
 import { UniqueUserInteractions } from '../types/user'
-import { Nullish } from '../types/util'
-
-const getReactionsForChannel = async (
-    channel: TextChannel,
-    options: ChannelLogsQueryOptions = { limit: 100 }
-): Promise<MessageReaction[]> => {
-    const startOfMonth = dayjs().startOf('month')
-    const today = new Date()
-
-    const messages = await channel.messages.fetch({
-        after: SnowflakeUtil.generate(startOfMonth.toDate()),
-        before: SnowflakeUtil.generate(today),
-        ...options
-    })
-
-    const reactions = messages.map(message => message.reactions.cache)
-    const reactionCollection = reactions.map(reaction => [...reaction.values()])
-
-    return reactionCollection.flat()
-}
+import * as reactions from '../controllers/message_reactions'
+import { MessageReaction } from '../models/message_reactions'
+import client from '../utils/client'
+import { fetchChannel, fetchUserById } from '../utils/interaction'
+import { errorReply } from '../utils/error'
 
 const getUniqueUserInteractions = async (
-    reactions: MessageReaction[]
+    items: MessageReaction[],
+    interaction: CommandInteraction
 ): Promise<UniqueUserInteractions> => {
     const map = new Map() as UniqueUserInteractions
 
-    await Promise.all(reactions.map(item => item.users.fetch()))
+    await Promise.all(items.map(item => fetchUserById(interaction, item.message_author_id)))
 
-    reactions.forEach(reaction => {
-        const users = [...reaction.users.cache.values()]
-        users.forEach(user => {
-            const id = user.username
+    items.forEach(reaction => {
+        const user = client.users.cache.get(reaction.message_author_id)
+        if (!user) return
 
-            if (map.has(id)) {
-                const prev = map.get(id) ?? 0
-                return map.set(id, prev + 1)
-            }
+        const id = user.username
 
-            return map.set(id, 1)
-        })
+        if (map.has(id)) {
+            const prev = map.get(id) ?? 0
+            return map.set(id, prev + 1)
+        }
+
+        return map.set(id, 1)
     })
 
     return map
 }
 
-const renderReply = (
-    param: string,
-    interactions: UniqueUserInteractions,
-    all: Nullish<boolean>
-): MessageEmbed => {
+const renderReply = (param: string, interactions: UniqueUserInteractions): MessageEmbed => {
     const positionEmojis: { [key: number]: string } = {
         1: ':first_place:',
         2: ':second_place:',
@@ -68,25 +41,22 @@ const renderReply = (
     }
 
     const fields: EmbedFieldData[] = [...interactions.entries()]
-        .sort(([, av], [, bv]) => av - bv)
+        .sort(([, av], [, bv]) => bv - av)
         .map(([k, v], i) => {
             const pos = i + 1
             const name = positionEmojis[pos] ? `${positionEmojis[pos]} ${k}` : k
             return { name, value: `${v}`, inline: pos <= 3 }
         })
 
-    const title = all
-        ? `:drum: The all time ${param} winners are...`
-        : `:drum: This months ${param} winners are...`
-
-    return new MessageEmbed().setTitle(title).addFields(fields)
+    return new MessageEmbed()
+        .setTitle(`:drum: The all time ${param} winners are...`)
+        .addFields(fields)
 }
 
 // FIXME: Add validation to ensure only 1 emoji was passed
 const handler: Command['handler'] = async interaction => {
     await interaction.deferReply({ ephemeral: true })
 
-    const allParam = interaction.options.getBoolean('all', false)
     const emojiParam = interaction.options.getString('emoji', true)
 
     const channel = await fetchChannel(interaction)
@@ -94,50 +64,41 @@ const handler: Command['handler'] = async interaction => {
         return interaction.editReply('/interaction can only be used in a text chat!')
     }
 
-    const textChannel = channel as TextChannel
-    const reactions = await getReactionsForChannel(textChannel, allParam ? {} : undefined)
-
-    if (!reactions.length) {
-        return interaction.editReply('No reactions found this month!')
-    }
-
     const identifiedEmoji = interaction.guild?.emojis.resolveIdentifier(emojiParam)
     if (!identifiedEmoji) {
-        return interaction.editReply('Error: Bad Emoji')
+        return interaction.editReply(errorReply("Looks like that emoji isn't valid"))
     }
 
-    const filteredReactions = reactions.filter(
-        reaction =>
-            interaction.guild?.emojis.resolveIdentifier(reaction.emoji.identifier) ===
-            identifiedEmoji
+    const guildId = interaction.guild?.id
+    if (!guildId) {
+        return interaction.editReply(errorReply('An unknown error occurred'))
+    }
+
+    const fetchedReactions = await reactions.get({
+        guild_id: guildId,
+        reaction_id: identifiedEmoji
+    })
+    if (!fetchedReactions.length) {
+        return interaction.editReply(errorReply(`Could not find any reactions using ${emojiParam}`))
+    }
+
+    const uniqueUserInteractions = await getUniqueUserInteractions(
+        fetchedReactions as MessageReaction[],
+        interaction
     )
-    if (!filteredReactions.length) {
-        return interaction.editReply('No reactions found this month!')
-    }
 
-    const uniqueUserInteractions = await getUniqueUserInteractions(filteredReactions)
-    const reply = renderReply(emojiParam, uniqueUserInteractions, allParam)
+    const reply = renderReply(emojiParam, uniqueUserInteractions)
 
     return interaction.editReply({ embeds: [reply] })
 }
 
-const builder = new SlashCommandBuilder()
-    .addStringOption(option =>
-        option
-            .setName('emoji')
-            .setDescription('The emoji to generate statistics for.')
-            .setRequired(true)
-    )
-    .addBooleanOption(option =>
-        option
-            .setName('all')
-            .setDescription('Retrieve statistics for all messages in current channel')
-            .setRequired(false)
-    )
+const builder = new SlashCommandBuilder().addStringOption(option =>
+    option.setName('emoji').setDescription('The emoji to fetch statistics for.').setRequired(true)
+)
 
 export default {
     name: 'leaderboard',
-    description: 'Give a reaction and measure who has used it the most for a month or forever!',
+    description: 'Provide an emoji and measure who has used it the most!',
     builder,
     handler
 } as Command
