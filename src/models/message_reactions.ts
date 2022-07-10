@@ -3,8 +3,9 @@ import { model, Schema } from 'mongoose'
 export interface MessageReaction {
     guild_id: string
     message_id: string
+    message_author_id: string
     reaction_id: string
-    user_id: string
+    reaction_user_id: string
 }
 
 const schema = new Schema<MessageReaction>({
@@ -16,11 +17,15 @@ const schema = new Schema<MessageReaction>({
         type: String,
         required: true
     },
+    message_author_id: {
+        type: String,
+        required: true
+    },
     reaction_id: {
         type: String,
         required: true
     },
-    user_id: {
+    reaction_user_id: {
         type: String,
         required: true
     }

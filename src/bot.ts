@@ -49,14 +49,18 @@ client.on('messageReactionAdd', async (reaction, user) => {
     const newReaction = {
         guild_id: reaction.message.guild?.id ?? '',
         message_id: reaction.message.id,
+        message_author_id: reaction.message.author?.id ?? '',
         reaction_id: reaction.emoji.identifier,
-        user_id: user.id
+        reaction_user_id: user.id
     }
 
     reactions
         .create(newReaction)
         .then(entry => {
-            logger.info('db', `User ${entry?.user_id} added reaction ${entry?.reaction_id}`)
+            logger.info(
+                'db',
+                `User ${entry?.reaction_user_id} added reaction ${entry?.reaction_id}`
+            )
         })
         .catch(handleDbErr)
 })

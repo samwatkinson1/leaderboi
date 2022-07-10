@@ -1,6 +1,19 @@
-import { Guild, MessageReaction, TextChannel } from 'discord.js'
+import { Guild, GuildEmoji, MessageReaction, ReactionEmoji, TextChannel } from 'discord.js'
 import logger from './logger'
 import * as messageReactions from '../controllers/message_reactions'
+import { Nullish } from '../types/util'
+
+type Emoji = GuildEmoji | ReactionEmoji
+
+const getEmojiId = (emoji: Emoji, guild: Nullish<Guild>) => {
+    const identifier = guild?.emojis.resolveIdentifier(emoji.identifier)
+
+    if (!identifier) {
+        throw new Error('Bad emoji!')
+    }
+
+    return identifier
+}
 
 const indexMessageReaction = async (reaction: MessageReaction) => {
     logger.info('bot', `Indexing ${reaction.message.id}...`)
@@ -11,8 +24,9 @@ const indexMessageReaction = async (reaction: MessageReaction) => {
             messageReactions.create({
                 guild_id: reaction.message.guild?.id ?? '',
                 message_id: reaction.message.id,
-                reaction_id: reaction.emoji.identifier,
-                user_id: user.id
+                message_author_id: reaction.message.author?.id ?? '',
+                reaction_id: getEmojiId(reaction.emoji, reaction.message.guild),
+                reaction_user_id: user.id
             })
         )
     )
